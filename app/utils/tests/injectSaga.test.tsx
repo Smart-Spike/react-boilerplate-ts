@@ -2,14 +2,12 @@
  * Test injectors
  */
 
-import { memoryHistory } from 'react-router-dom';
 import { put } from 'redux-saga/effects';
 import { shallow } from 'enzyme';
-import React from 'react';
+import * as React from 'react';
 
 import configureStore from '../../configureStore';
 import injectSaga from '../injectSaga';
-import * as sagaInjectors from '../sagaInjectors';
 
 // Fixtures
 const Component = () => null;
@@ -18,35 +16,36 @@ function* testSaga() {
   yield put({ type: 'TEST', payload: 'yup' });
 }
 
+const mockInjectors = {
+  injectSaga: jest.fn(),
+  ejectSaga: jest.fn(),
+};
+
+jest.mock('../sagaInjectors', () => {
+  return {
+    getInjectors: () => mockInjectors
+  }
+});
+
 describe('injectSaga decorator', () => {
   let store;
-  let injectors;
   let ComponentWithSaga;
 
-  beforeAll(() => {
-    sagaInjectors.default = jest.fn().mockImplementation(() => injectors);
-  });
-
   beforeEach(() => {
-    store = configureStore({}, memoryHistory);
-    injectors = {
-      injectSaga: jest.fn(),
-      ejectSaga: jest.fn(),
-    };
+    store = configureStore({}, {});
     ComponentWithSaga = injectSaga({
       key: 'test',
       saga: testSaga,
       mode: 'testMode',
     })(Component);
-    sagaInjectors.default.mockClear();
   });
 
   it('should inject given saga, mode, and props', () => {
     const props = { test: 'test' };
     shallow(<ComponentWithSaga {...props} />, { context: { store } });
 
-    expect(injectors.injectSaga).toHaveBeenCalledTimes(1);
-    expect(injectors.injectSaga).toHaveBeenCalledWith(
+    expect(mockInjectors.injectSaga).toHaveBeenCalledTimes(1);
+    expect(mockInjectors.injectSaga).toHaveBeenCalledWith(
       'test',
       { saga: testSaga, mode: 'testMode' },
       props,
@@ -60,14 +59,14 @@ describe('injectSaga decorator', () => {
     });
     renderedComponent.unmount();
 
-    expect(injectors.ejectSaga).toHaveBeenCalledTimes(1);
-    expect(injectors.ejectSaga).toHaveBeenCalledWith('test');
+    expect(mockInjectors.ejectSaga).toHaveBeenCalledTimes(1);
+    expect(mockInjectors.ejectSaga).toHaveBeenCalledWith('test');
   });
 
   it('should set a correct display name', () => {
     expect(ComponentWithSaga.displayName).toBe('withSaga(Component)');
     expect(
-      injectSaga({ key: 'test', saga: testSaga })(() => null).displayName,
+      injectSaga({ key: 'test', saga: testSaga, mode: '' })(() => null).displayName,
     ).toBe('withSaga(Component)');
   });
 

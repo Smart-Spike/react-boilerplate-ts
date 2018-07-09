@@ -2,43 +2,42 @@
  * Test injectors
  */
 
-import { memoryHistory } from 'react-router-dom';
 import { shallow } from 'enzyme';
-import React from 'react';
-import identity from 'lodash/identity';
+import * as React from 'react';
+import { identity } from 'lodash';
 
 import configureStore from '../../configureStore';
 import injectReducer from '../injectReducer';
-import * as reducerInjectors from '../reducerInjectors';
 
 // Fixtures
 const Component = () => null;
 
 const reducer = identity;
 
+const mockInjectors = {
+  injectReducer: jest.fn()
+};
+
+jest.mock('../reducerInjectors', () => {
+  return {
+    getInjectors: () =>  mockInjectors
+  }
+});
+
 describe('injectReducer decorator', () => {
   let store;
-  let injectors;
   let ComponentWithReducer;
 
-  beforeAll(() => {
-    reducerInjectors.default = jest.fn().mockImplementation(() => injectors);
-  });
-
   beforeEach(() => {
-    store = configureStore({}, memoryHistory);
-    injectors = {
-      injectReducer: jest.fn(),
-    };
+    store = configureStore({}, {});
     ComponentWithReducer = injectReducer({ key: 'test', reducer })(Component);
-    reducerInjectors.default.mockClear();
   });
 
   it('should inject a given reducer', () => {
     shallow(<ComponentWithReducer />, { context: { store } });
 
-    expect(injectors.injectReducer).toHaveBeenCalledTimes(1);
-    expect(injectors.injectReducer).toHaveBeenCalledWith('test', reducer);
+    expect(mockInjectors.injectReducer).toHaveBeenCalledTimes(1);
+    expect(mockInjectors.injectReducer).toHaveBeenCalledWith('test', reducer);
   });
 
   it('should set a correct display name', () => {

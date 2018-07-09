@@ -9,18 +9,18 @@
 import 'babel-polyfill';
 
 // Import all the third party stuff
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { ConnectedRouter } from 'react-router-redux';
 import createHistory from 'history/createBrowserHistory';
 import 'sanitize.css/sanitize.css';
 
 // Import root app
-import App from 'containers/App';
+import App from 'containers/App/index';
 
 // Import Language Provider
-import LanguageProvider from 'containers/LanguageProvider';
+import LanguageProvider from 'containers/LanguageProvider/index';
 
 // Load the favicon and the .htaccess file
 /* eslint-disable import/no-unresolved, import/extensions */
@@ -35,6 +35,13 @@ import { translationMessages } from './i18n';
 
 // Import CSS reset and Global Styles
 import './global-styles';
+
+declare global {
+  interface Window {
+    Intl: any,
+    __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any
+  }
+}
 
 // Create redux store with history
 const initialState = {};
